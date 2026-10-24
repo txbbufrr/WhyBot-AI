@@ -346,7 +346,8 @@ with st.sidebar:
     st.markdown("**Local AI**")
     st.caption("Explanation powered by Ollama and Gemma.")
 
-    # Explain mission with Ollama
+    ```python
+    # Explain mission with Groq
     if st.button(
         "🧠 Explain the Mission",
         use_container_width=True,
@@ -379,17 +380,25 @@ Use three or four short bullet points.
 """
 
             try:
-                with st.spinner("Gemma is analyzing the mission..."):
+                with st.spinner("WhyBot AI is analyzing the mission..."):
+                    api_key = st.secrets["GROQ_API_KEY"]
+
                     response = requests.post(
-                        "http://localhost:11434/api/generate",
+                        "https://api.groq.com/openai/v1/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {api_key}",
+                            "Content-Type": "application/json",
+                        },
                         json={
-                            "model": "gemma4:e2b",
-                            "prompt": prompt,
-                            "stream": False,
-                            "keep_alive": "10m",
-                            "options": {
-                                "num_predict": 200,
-                            },
+                            "model": "llama-3.3-70b-versatile",
+                            "messages": [
+                                {
+                                    "role": "user",
+                                    "content": prompt,
+                                }
+                            ],
+                            "temperature": 0.3,
+                            "max_tokens": 300,
                         },
                         timeout=60,
                     )
@@ -397,40 +406,45 @@ Use three or four short bullet points.
                     response.raise_for_status()
                     result = response.json()
 
-                    st.session_state.explanation = result.get(
-                        "response",
-                        "Gemma returned no explanation.",
-                    ).strip()
+                    st.session_state.explanation = (
+                        result["choices"][0]["message"]["content"].strip()
+                    )
 
                     if not st.session_state.explanation:
                         st.session_state.explanation = (
-                            "Gemma returned an empty explanation. Please try again."
+                            "The AI returned an empty explanation. Please try again."
                         )
+
+            except KeyError:
+                st.session_state.explanation = (
+                    "Groq API key is missing. Check your Streamlit Secrets."
+                )
 
             except requests.exceptions.ConnectionError:
                 st.session_state.explanation = (
-                    "Could not connect to Ollama. Make sure Ollama is running "
-                    "and the gemma4:e2b model is installed."
+                    "Could not connect to Groq. Check your internet connection."
                 )
 
             except requests.exceptions.Timeout:
                 st.session_state.explanation = (
-                    "Gemma took too long to respond. Please try again."
+                    "The AI took too long to respond. Please try again."
                 )
 
             except requests.exceptions.HTTPError as error:
                 st.session_state.explanation = (
-                    f"Ollama returned an HTTP error: {error}"
+                    f"Groq API error: {error.response.status_code}. "
+                    "Check your API key, model availability, and usage limits."
                 )
 
-            except (requests.exceptions.RequestException, ValueError) as error:
+            except (requests.exceptions.RequestException, ValueError, IndexError, TypeError, KeyError) as error:
                 st.session_state.explanation = (
-                    f"Could not get an explanation: {error}"
+                    f"Could not get an AI explanation: {error}"
                 )
 
     if st.session_state.explanation:
         st.markdown("### AI Explanation")
         st.write(st.session_state.explanation)
+```
 
 
 # =========================================================

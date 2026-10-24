@@ -346,7 +346,7 @@ with st.sidebar:
     st.markdown("**Local AI**")
     st.caption("Explanation powered by Ollama and Gemma.")
 
-    ```python
+
     # Explain mission with Groq
     if st.button(
         "🧠 Explain the Mission",

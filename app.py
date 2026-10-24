@@ -444,7 +444,6 @@ Use three or four short bullet points.
     if st.session_state.explanation:
         st.markdown("### AI Explanation")
         st.write(st.session_state.explanation)
-```
 
 
 # =========================================================
